@@ -5,7 +5,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-local Remote = ReplicatedStorage:WaitForChild("TeamJoinEvent")
+
+local RemoteTimes = ReplicatedStorage:WaitForChild("TeamJoinEvent")
+local BatePontoRemotes = ReplicatedStorage:WaitForChild("BatePontoRemotes")
+local RemoteSalario = BatePontoRemotes:WaitForChild("NotificarSalario")
 
 local GuiAntiga = PlayerGui:FindFirstChild("MoscaMenuGui")
 if GuiAntiga then
@@ -119,7 +122,6 @@ Titulo.Position = UDim2.new(0, 8, 0, 0)
 Titulo.BackgroundTransparency = 1
 Titulo.Text = "MoscaMenu"
 Titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
-Titulo.TextTransparency = 0
 Titulo.Font = Enum.Font.GothamBold
 Titulo.TextSize = 16
 Titulo.TextXAlignment = Enum.TextXAlignment.Left
@@ -135,16 +137,6 @@ Fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
 Fechar.Font = Enum.Font.GothamBold
 Fechar.TextSize = 16
 Fechar.Parent = BarraTopo
-
-Fechar.MouseButton1Click:Connect(function()
-	Janela.Visible = false
-	IconeAbrir.Visible = true
-end)
-
-IconeAbrir.MouseButton1Click:Connect(function()
-	Janela.Visible = true
-	IconeAbrir.Visible = false
-end)
 
 local MenuLateral = Instance.new("Frame")
 MenuLateral.Name = "MenuLateral"
@@ -162,10 +154,6 @@ ListaMenu.VerticalAlignment = Enum.VerticalAlignment.Top
 ListaMenu.Padding = UDim.new(0, 5)
 ListaMenu.Parent = MenuLateral
 
-local PaddingMenu = Instance.new("UIPadding")
-PaddingMenu.PaddingTop = UDim.new(0, 0)
-PaddingMenu.Parent = MenuLateral
-
 local Area = Instance.new("Frame")
 Area.Name = "Area"
 Area.Size = UDim2.new(1, -120, 1, -50)
@@ -175,69 +163,64 @@ Area.BackgroundTransparency = 0.2
 Area.BorderSizePixel = 0
 Area.Parent = Janela
 
-local PaginaHome = Instance.new("Frame")
-PaginaHome.Name = "Home"
-PaginaHome.Size = UDim2.new(1, 0, 1, 0)
-PaginaHome.BackgroundTransparency = 1
-PaginaHome.Visible = true
-PaginaHome.Parent = Area
+Fechar.MouseButton1Click:Connect(function()
+	Janela.Visible = false
+	IconeAbrir.Visible = true
+end)
 
-local PaginaTimes = Instance.new("ScrollingFrame")
-PaginaTimes.Name = "Times"
-PaginaTimes.Size = UDim2.new(1, -4, 1, 0)
-PaginaTimes.Position = UDim2.new(0, 0, 0, 0)
-PaginaTimes.BackgroundTransparency = 1
-PaginaTimes.BorderSizePixel = 0
-PaginaTimes.ScrollBarThickness = 4
-PaginaTimes.ScrollBarImageColor3 = Color3.fromRGB(130, 115, 160)
-PaginaTimes.CanvasSize = UDim2.new(0, 0, 0, 0)
-PaginaTimes.AutomaticCanvasSize = Enum.AutomaticSize.Y
-PaginaTimes.Visible = false
-PaginaTimes.Parent = Area
+IconeAbrir.MouseButton1Click:Connect(function()
+	Janela.Visible = true
+	IconeAbrir.Visible = false
+end)
 
-local LayoutTimes = Instance.new("UIListLayout")
-LayoutTimes.FillDirection = Enum.FillDirection.Vertical
-LayoutTimes.HorizontalAlignment = Enum.HorizontalAlignment.Center
-LayoutTimes.VerticalAlignment = Enum.VerticalAlignment.Top
-LayoutTimes.Padding = UDim.new(0, 6)
-LayoutTimes.Parent = PaginaTimes
+local Paginas = {}
 
-local PaddingTimes = Instance.new("UIPadding")
-PaddingTimes.PaddingTop = UDim.new(0, 0)
-PaddingTimes.PaddingLeft = UDim.new(0, 0)
-PaddingTimes.PaddingRight = UDim.new(0, 6)
-PaddingTimes.Parent = PaginaTimes
+local function CriarPagina(Nome, Scroll)
+	local Pagina
 
-local PaginaMosca = Instance.new("ScrollingFrame")
-PaginaMosca.Name = "MoscaMenu"
-PaginaMosca.Size = UDim2.new(1, -4, 1, 0)
-PaginaMosca.Position = UDim2.new(0, 0, 0, 0)
-PaginaMosca.BackgroundTransparency = 1
-PaginaMosca.BorderSizePixel = 0
-PaginaMosca.ScrollBarThickness = 4
-PaginaMosca.ScrollBarImageColor3 = Color3.fromRGB(130, 115, 160)
-PaginaMosca.CanvasSize = UDim2.new(0, 0, 0, 0)
-PaginaMosca.AutomaticCanvasSize = Enum.AutomaticSize.Y
-PaginaMosca.Visible = false
-PaginaMosca.Parent = Area
+	if Scroll then
+		Pagina = Instance.new("ScrollingFrame")
+		Pagina.ScrollBarThickness = 4
+		Pagina.ScrollBarImageColor3 = Color3.fromRGB(130, 115, 160)
+		Pagina.CanvasSize = UDim2.new(0, 0, 0, 0)
+		Pagina.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	else
+		Pagina = Instance.new("Frame")
+	end
 
-local LayoutScroll = Instance.new("UIListLayout")
-LayoutScroll.FillDirection = Enum.FillDirection.Vertical
-LayoutScroll.HorizontalAlignment = Enum.HorizontalAlignment.Center
-LayoutScroll.VerticalAlignment = Enum.VerticalAlignment.Top
-LayoutScroll.Padding = UDim.new(0, 7)
-LayoutScroll.Parent = PaginaMosca
+	Pagina.Name = Nome
+	Pagina.Size = UDim2.new(1, -4, 1, 0)
+	Pagina.Position = UDim2.new(0, 0, 0, 0)
+	Pagina.BackgroundTransparency = 1
+	Pagina.BorderSizePixel = 0
+	Pagina.Visible = false
+	Pagina.Parent = Area
 
-local PaddingScroll = Instance.new("UIPadding")
-PaddingScroll.PaddingTop = UDim.new(0, 0)
-PaddingScroll.PaddingLeft = UDim.new(0, 0)
-PaddingScroll.PaddingRight = UDim.new(0, 6)
-PaddingScroll.Parent = PaginaMosca
+	local Layout = Instance.new("UIListLayout")
+	Layout.FillDirection = Enum.FillDirection.Vertical
+	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Layout.VerticalAlignment = Enum.VerticalAlignment.Top
+	Layout.Padding = UDim.new(0, 6)
+	Layout.Parent = Pagina
+
+	local Padding = Instance.new("UIPadding")
+	Padding.PaddingRight = UDim.new(0, 6)
+	Padding.Parent = Pagina
+
+	Paginas[Nome] = Pagina
+	return Pagina
+end
+
+local PaginaHome = CriarPagina("Home", false)
+local PaginaTimes = CriarPagina("Times", true)
+local PaginaPlayer = CriarPagina("Player", true)
+local PaginaTP = CriarPagina("TP", true)
+local PaginaVisual = CriarPagina("Visual", true)
 
 local function TrocarPagina(Nome)
-	PaginaHome.Visible = Nome == "Home"
-	PaginaTimes.Visible = Nome == "Times"
-	PaginaMosca.Visible = Nome ~= "Home" and Nome ~= "Times"
+	for NomePagina, Pagina in pairs(Paginas) do
+		Pagina.Visible = NomePagina == Nome
+	end
 end
 
 local function CriarBotaoMenu(Texto)
@@ -250,7 +233,6 @@ local function CriarBotaoMenu(Texto)
 	Botao.BorderColor3 = Color3.fromRGB(22, 22, 22)
 	Botao.Text = Texto
 	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Botao.TextTransparency = 0.03
 	Botao.Font = Enum.Font.GothamBold
 	Botao.TextSize = 13
 	Botao.Parent = MenuLateral
@@ -266,8 +248,6 @@ local function CriarBotaoMenu(Texto)
 	Botao.MouseButton1Click:Connect(function()
 		TrocarPagina(Texto)
 	end)
-
-	return Botao
 end
 
 CriarBotaoMenu("Home")
@@ -276,24 +256,65 @@ CriarBotaoMenu("Player")
 CriarBotaoMenu("TP")
 CriarBotaoMenu("Visual")
 
+local function AplicarGradiente(Objeto)
+	local Gradiente = Instance.new("UIGradient")
+	Gradiente.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
+	})
+	Gradiente.Rotation = 90
+	Gradiente.Parent = Objeto
+end
+
+local function CriarTitulo(Parent, Texto)
+	local Label = Instance.new("TextLabel")
+	Label.Name = Texto
+	Label.Size = UDim2.new(1, -8, 0, 32)
+	Label.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	Label.BackgroundTransparency = 0.08
+	Label.BorderSizePixel = 1
+	Label.BorderColor3 = Color3.fromRGB(18, 18, 18)
+	Label.Text = Texto
+	Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Label.Font = Enum.Font.GothamBold
+	Label.TextSize = 14
+	Label.Parent = Parent
+	AplicarGradiente(Label)
+	return Label
+end
+
+local function CriarBotao(Parent, Texto, Funcao)
+	local Botao = Instance.new("TextButton")
+	Botao.Name = Texto
+	Botao.Size = UDim2.new(1, -8, 0, 32)
+	Botao.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	Botao.BackgroundTransparency = 0.08
+	Botao.BorderSizePixel = 1
+	Botao.BorderColor3 = Color3.fromRGB(18, 18, 18)
+	Botao.Text = Texto
+	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Botao.Font = Enum.Font.GothamBold
+	Botao.TextSize = 13
+	Botao.Parent = Parent
+	AplicarGradiente(Botao)
+
+	if Funcao then
+		Botao.MouseButton1Click:Connect(Funcao)
+	end
+
+	return Botao
+end
+
 local Infos = Instance.new("Frame")
 Infos.Name = "Infos"
 Infos.Size = UDim2.new(1, -8, 0, 190)
-Infos.Position = UDim2.new(0, 0, 0, 0)
 Infos.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 Infos.BackgroundTransparency = 0.08
 Infos.BorderSizePixel = 1
 Infos.BorderColor3 = Color3.fromRGB(18, 18, 18)
 Infos.Parent = PaginaHome
-
-local InfosGradiente = Instance.new("UIGradient")
-InfosGradiente.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(62, 62, 62)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
-})
-InfosGradiente.Rotation = 90
-InfosGradiente.Parent = Infos
+AplicarGradiente(Infos)
 
 local InfosTitulo = Instance.new("TextLabel")
 InfosTitulo.Name = "Titulo"
@@ -302,7 +323,6 @@ InfosTitulo.Position = UDim2.new(0, 6, 0, 5)
 InfosTitulo.BackgroundTransparency = 1
 InfosTitulo.Text = "Infos"
 InfosTitulo.TextColor3 = Color3.fromRGB(255, 255, 255)
-InfosTitulo.TextTransparency = 0.02
 InfosTitulo.Font = Enum.Font.GothamBold
 InfosTitulo.TextSize = 15
 InfosTitulo.TextXAlignment = Enum.TextXAlignment.Left
@@ -316,7 +336,6 @@ local function CriarInfo(Texto, Ordem)
 	Label.BackgroundTransparency = 1
 	Label.Text = Texto
 	Label.TextColor3 = Color3.fromRGB(235, 235, 235)
-	Label.TextTransparency = 0.05
 	Label.Font = Enum.Font.GothamBold
 	Label.TextSize = 12
 	Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -330,55 +349,11 @@ CriarInfo("Mapa atual: " .. NomeMapa, 3)
 CriarInfo("Id da place: " .. tostring(game.PlaceId), 4)
 CriarInfo("Id do usuario: " .. tostring(Player.UserId), 5)
 
-local TituloTimes = Instance.new("TextLabel")
-TituloTimes.Name = "TituloTimes"
-TituloTimes.Size = UDim2.new(1, -8, 0, 32)
-TituloTimes.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TituloTimes.BackgroundTransparency = 0.08
-TituloTimes.BorderSizePixel = 1
-TituloTimes.BorderColor3 = Color3.fromRGB(18, 18, 18)
-TituloTimes.Text = "Times"
-TituloTimes.TextColor3 = Color3.fromRGB(255, 255, 255)
-TituloTimes.TextTransparency = 0.02
-TituloTimes.Font = Enum.Font.GothamBold
-TituloTimes.TextSize = 14
-TituloTimes.Parent = PaginaTimes
-
-local GradienteTimes = Instance.new("UIGradient")
-GradienteTimes.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(62, 62, 62)),
-	ColorSequenceKeypoint.new(0.55, Color3.fromRGB(46, 46, 46)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(38, 35, 45))
-})
-GradienteTimes.Rotation = 90
-GradienteTimes.Parent = TituloTimes
+CriarTitulo(PaginaTimes, "Times")
 
 local function CriarBotaoTime(Time)
-	local Botao = Instance.new("TextButton")
-	Botao.Name = Time.Name
-	Botao.Size = UDim2.new(1, -8, 0, 32)
-	Botao.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	Botao.BackgroundTransparency = 0.08
-	Botao.BorderSizePixel = 1
-	Botao.BorderColor3 = Color3.fromRGB(18, 18, 18)
-	Botao.Text = Time.Name
-	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Botao.TextTransparency = 0.03
-	Botao.Font = Enum.Font.GothamBold
-	Botao.TextSize = 13
-	Botao.Parent = PaginaTimes
-
-	local Gradiente = Instance.new("UIGradient")
-	Gradiente.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
-	})
-	Gradiente.Rotation = 90
-	Gradiente.Parent = Botao
-
-	Botao.MouseButton1Click:Connect(function()
-		Remote:FireServer(Time.Name)
+	CriarBotao(PaginaTimes, Time.Name, function()
+		RemoteTimes:FireServer(Time.Name)
 	end)
 end
 
@@ -400,70 +375,40 @@ Teams.ChildAdded:Connect(function(Time)
 	end
 end)
 
-local function CriarCategoria(Nome, Quantidade)
-	local Categoria = Instance.new("Frame")
-	Categoria.Name = "MoscaMenu"
-	Categoria.Size = UDim2.new(1, -8, 0, 0)
-	Categoria.AutomaticSize = Enum.AutomaticSize.Y
-	Categoria.BackgroundTransparency = 1
-	Categoria.BorderSizePixel = 0
-	Categoria.Parent = PaginaMosca
+CriarTitulo(PaginaPlayer, "Player")
 
-	local Layout = Instance.new("UIListLayout")
-	Layout.FillDirection = Enum.FillDirection.Vertical
-	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	Layout.VerticalAlignment = Enum.VerticalAlignment.Top
-	Layout.Padding = UDim.new(0, 5)
-	Layout.Parent = Categoria
+local CooldownSalario = false
 
-	local TituloCategoria = Instance.new("TextLabel")
-	TituloCategoria.Name = "MoscaMenu"
-	TituloCategoria.Size = UDim2.new(1, 0, 0, 32)
-	TituloCategoria.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	TituloCategoria.BackgroundTransparency = 0.08
-	TituloCategoria.BorderSizePixel = 1
-	TituloCategoria.BorderColor3 = Color3.fromRGB(18, 18, 18)
-	TituloCategoria.Text = Nome
-	TituloCategoria.TextColor3 = Color3.fromRGB(255, 255, 255)
-	TituloCategoria.TextTransparency = 0.02
-	TituloCategoria.Font = Enum.Font.GothamBold
-	TituloCategoria.TextSize = 14
-	TituloCategoria.Parent = Categoria
-
-	local GradienteTitulo = Instance.new("UIGradient")
-	GradienteTitulo.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(62, 62, 62)),
-		ColorSequenceKeypoint.new(0.55, Color3.fromRGB(46, 46, 46)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(38, 35, 45))
-	})
-	GradienteTitulo.Rotation = 90
-	GradienteTitulo.Parent = TituloCategoria
-
-	for i = 1, Quantidade do
-		local Texto = Instance.new("TextLabel")
-		Texto.Name = "MoscaMenu"
-		Texto.Size = UDim2.new(1, 0, 0, 32)
-		Texto.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-		Texto.BackgroundTransparency = 0.08
-		Texto.BorderSizePixel = 1
-		Texto.BorderColor3 = Color3.fromRGB(18, 18, 18)
-		Texto.Text = "Mosca Menu"
-		Texto.TextColor3 = Color3.fromRGB(255, 255, 255)
-		Texto.TextTransparency = 0.03
-		Texto.Font = Enum.Font.GothamBold
-		Texto.TextSize = 14
-		Texto.Parent = Categoria
-
-		local GradienteTexto = Instance.new("UIGradient")
-		GradienteTexto.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
-			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
-		})
-		GradienteTexto.Rotation = 90
-		GradienteTexto.Parent = Texto
+CriarBotao(PaginaPlayer, "Notificar Salario Todos", function()
+	if CooldownSalario then
+		return
 	end
+
+	CooldownSalario = true
+
+	pcall(function()
+		RemoteSalario:FireServer("MoscaMenu")
+	end)
+
+	task.delay(3, function()
+		CooldownSalario = false
+	end)
+end)
+
+for i = 1, 6 do
+	CriarBotao(PaginaPlayer, "Mosca Menu", nil)
 end
 
-CriarCategoria("MoscaMenu", 5)
-CriarCategoria("MoscaMenu", 5)
+CriarTitulo(PaginaTP, "TP")
+
+for i = 1, 7 do
+	CriarBotao(PaginaTP, "Mosca Menu", nil)
+end
+
+CriarTitulo(PaginaVisual, "Visual")
+
+for i = 1, 7 do
+	CriarBotao(PaginaVisual, "Mosca Menu", nil)
+end
+
+TrocarPagina("Home")
