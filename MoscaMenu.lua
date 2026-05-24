@@ -1,8 +1,11 @@
 local Players = game:GetService("Players")
+local Teams = game:GetService("Teams")
 local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+local Remote = ReplicatedStorage:WaitForChild("TeamJoinEvent")
 
 local GuiAntiga = PlayerGui:FindFirstChild("MoscaMenuGui")
 if GuiAntiga then
@@ -179,6 +182,32 @@ PaginaHome.BackgroundTransparency = 1
 PaginaHome.Visible = true
 PaginaHome.Parent = Area
 
+local PaginaTimes = Instance.new("ScrollingFrame")
+PaginaTimes.Name = "Times"
+PaginaTimes.Size = UDim2.new(1, -4, 1, 0)
+PaginaTimes.Position = UDim2.new(0, 0, 0, 0)
+PaginaTimes.BackgroundTransparency = 1
+PaginaTimes.BorderSizePixel = 0
+PaginaTimes.ScrollBarThickness = 4
+PaginaTimes.ScrollBarImageColor3 = Color3.fromRGB(130, 115, 160)
+PaginaTimes.CanvasSize = UDim2.new(0, 0, 0, 0)
+PaginaTimes.AutomaticCanvasSize = Enum.AutomaticSize.Y
+PaginaTimes.Visible = false
+PaginaTimes.Parent = Area
+
+local LayoutTimes = Instance.new("UIListLayout")
+LayoutTimes.FillDirection = Enum.FillDirection.Vertical
+LayoutTimes.HorizontalAlignment = Enum.HorizontalAlignment.Center
+LayoutTimes.VerticalAlignment = Enum.VerticalAlignment.Top
+LayoutTimes.Padding = UDim.new(0, 6)
+LayoutTimes.Parent = PaginaTimes
+
+local PaddingTimes = Instance.new("UIPadding")
+PaddingTimes.PaddingTop = UDim.new(0, 0)
+PaddingTimes.PaddingLeft = UDim.new(0, 0)
+PaddingTimes.PaddingRight = UDim.new(0, 6)
+PaddingTimes.Parent = PaginaTimes
+
 local PaginaMosca = Instance.new("ScrollingFrame")
 PaginaMosca.Name = "MoscaMenu"
 PaginaMosca.Size = UDim2.new(1, -4, 1, 0)
@@ -207,7 +236,8 @@ PaddingScroll.Parent = PaginaMosca
 
 local function TrocarPagina(Nome)
 	PaginaHome.Visible = Nome == "Home"
-	PaginaMosca.Visible = Nome ~= "Home"
+	PaginaTimes.Visible = Nome == "Times"
+	PaginaMosca.Visible = Nome ~= "Home" and Nome ~= "Times"
 end
 
 local function CriarBotaoMenu(Texto)
@@ -241,6 +271,7 @@ local function CriarBotaoMenu(Texto)
 end
 
 CriarBotaoMenu("Home")
+CriarBotaoMenu("Times")
 CriarBotaoMenu("Player")
 CriarBotaoMenu("TP")
 CriarBotaoMenu("Visual")
@@ -298,6 +329,76 @@ CriarInfo("Holders: Wzjay & Menddsz", 2)
 CriarInfo("Mapa atual: " .. NomeMapa, 3)
 CriarInfo("Id da place: " .. tostring(game.PlaceId), 4)
 CriarInfo("Id do usuario: " .. tostring(Player.UserId), 5)
+
+local TituloTimes = Instance.new("TextLabel")
+TituloTimes.Name = "TituloTimes"
+TituloTimes.Size = UDim2.new(1, -8, 0, 32)
+TituloTimes.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TituloTimes.BackgroundTransparency = 0.08
+TituloTimes.BorderSizePixel = 1
+TituloTimes.BorderColor3 = Color3.fromRGB(18, 18, 18)
+TituloTimes.Text = "Times"
+TituloTimes.TextColor3 = Color3.fromRGB(255, 255, 255)
+TituloTimes.TextTransparency = 0.02
+TituloTimes.Font = Enum.Font.GothamBold
+TituloTimes.TextSize = 14
+TituloTimes.Parent = PaginaTimes
+
+local GradienteTimes = Instance.new("UIGradient")
+GradienteTimes.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(62, 62, 62)),
+	ColorSequenceKeypoint.new(0.55, Color3.fromRGB(46, 46, 46)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(38, 35, 45))
+})
+GradienteTimes.Rotation = 90
+GradienteTimes.Parent = TituloTimes
+
+local function CriarBotaoTime(Time)
+	local Botao = Instance.new("TextButton")
+	Botao.Name = Time.Name
+	Botao.Size = UDim2.new(1, -8, 0, 32)
+	Botao.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	Botao.BackgroundTransparency = 0.08
+	Botao.BorderSizePixel = 1
+	Botao.BorderColor3 = Color3.fromRGB(18, 18, 18)
+	Botao.Text = Time.Name
+	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Botao.TextTransparency = 0.03
+	Botao.Font = Enum.Font.GothamBold
+	Botao.TextSize = 13
+	Botao.Parent = PaginaTimes
+
+	local Gradiente = Instance.new("UIGradient")
+	Gradiente.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
+	})
+	Gradiente.Rotation = 90
+	Gradiente.Parent = Botao
+
+	Botao.MouseButton1Click:Connect(function()
+		Remote:FireServer(Time.Name)
+	end)
+end
+
+local ListaTimes = Teams:GetChildren()
+
+table.sort(ListaTimes, function(A, B)
+	return A.Name < B.Name
+end)
+
+for _, Time in ipairs(ListaTimes) do
+	if Time:IsA("Team") then
+		CriarBotaoTime(Time)
+	end
+end
+
+Teams.ChildAdded:Connect(function(Time)
+	if Time:IsA("Team") then
+		CriarBotaoTime(Time)
+	end
+end)
 
 local function CriarCategoria(Nome, Quantidade)
 	local Categoria = Instance.new("Frame")
