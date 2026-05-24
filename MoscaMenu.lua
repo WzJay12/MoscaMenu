@@ -173,6 +173,158 @@ IconeAbrir.MouseButton1Click:Connect(function()
 	IconeAbrir.Visible = false
 end)
 
+local function AplicarGradiente(Objeto)
+	local Gradiente = Instance.new("UIGradient")
+	Gradiente.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
+	})
+	Gradiente.Rotation = 90
+	Gradiente.Parent = Objeto
+end
+
+local function CriarNotificacaoSalario(Texto)
+	local Antiga = PlayerGui:FindFirstChild("MoscaMenuSalario")
+	if Antiga then
+		Antiga:Destroy()
+	end
+
+	local Gui = Instance.new("ScreenGui")
+	Gui.Name = "MoscaMenuSalario"
+	Gui.ResetOnSpawn = false
+	Gui.IgnoreGuiInset = true
+	Gui.Parent = PlayerGui
+
+	local Caixa = Instance.new("Frame")
+	Caixa.Name = "Caixa"
+	Caixa.AnchorPoint = Vector2.new(0.5, 0)
+	Caixa.Position = UDim2.new(0.5, 0, 0, 35)
+	Caixa.Size = UDim2.new(0, 360, 0, 95)
+	Caixa.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	Caixa.BackgroundTransparency = 0.05
+	Caixa.BorderSizePixel = 1
+	Caixa.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Caixa.Parent = Gui
+
+	local Canto = Instance.new("UICorner")
+	Canto.CornerRadius = UDim.new(0, 8)
+	Canto.Parent = Caixa
+
+	local Borda = Instance.new("UIStroke")
+	Borda.Color = Color3.fromRGB(150, 90, 220)
+	Borda.Transparency = 0.15
+	Borda.Thickness = 1.5
+	Borda.Parent = Caixa
+
+	local SombraNotificacao = Instance.new("ImageLabel")
+	SombraNotificacao.Name = "SombraRoxa"
+	SombraNotificacao.AnchorPoint = Vector2.new(0.5, 0.5)
+	SombraNotificacao.Position = UDim2.new(0.5, 0, 0.5, 7)
+	SombraNotificacao.Size = UDim2.new(1, 30, 1, 30)
+	SombraNotificacao.BackgroundTransparency = 1
+	SombraNotificacao.Image = "rbxassetid://1316045217"
+	SombraNotificacao.ImageColor3 = Color3.fromRGB(105, 45, 180)
+	SombraNotificacao.ImageTransparency = 0.55
+	SombraNotificacao.ScaleType = Enum.ScaleType.Slice
+	SombraNotificacao.SliceCenter = Rect.new(10, 10, 118, 118)
+	SombraNotificacao.ZIndex = 0
+	SombraNotificacao.Parent = Caixa
+
+	AplicarGradiente(Caixa)
+
+	local Topo = Instance.new("Frame")
+	Topo.Name = "Topo"
+	Topo.Size = UDim2.new(1, 0, 0, 28)
+	Topo.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	Topo.BackgroundTransparency = 0.12
+	Topo.BorderSizePixel = 0
+	Topo.Parent = Caixa
+
+	local TopoCanto = Instance.new("UICorner")
+	TopoCanto.CornerRadius = UDim.new(0, 8)
+	TopoCanto.Parent = Topo
+
+	local Icone = Instance.new("TextLabel")
+	Icone.Name = "Icone"
+	Icone.Size = UDim2.new(0, 32, 1, 0)
+	Icone.Position = UDim2.new(0, 5, 0, 0)
+	Icone.BackgroundTransparency = 1
+	Icone.Text = "🦟"
+	Icone.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Icone.Font = Enum.Font.GothamBold
+	Icone.TextSize = 18
+	Icone.Parent = Topo
+
+	local TituloNotificacao = Instance.new("TextLabel")
+	TituloNotificacao.Name = "Titulo"
+	TituloNotificacao.Size = UDim2.new(1, -45, 1, 0)
+	TituloNotificacao.Position = UDim2.new(0, 38, 0, 0)
+	TituloNotificacao.BackgroundTransparency = 1
+	TituloNotificacao.Text = "MoscaMenu"
+	TituloNotificacao.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TituloNotificacao.Font = Enum.Font.GothamBold
+	TituloNotificacao.TextSize = 14
+	TituloNotificacao.TextXAlignment = Enum.TextXAlignment.Left
+	TituloNotificacao.Parent = Topo
+
+	local Mensagem = Instance.new("TextLabel")
+	Mensagem.Name = "Mensagem"
+	Mensagem.Size = UDim2.new(1, -20, 1, -38)
+	Mensagem.Position = UDim2.new(0, 10, 0, 34)
+	Mensagem.BackgroundTransparency = 1
+	Mensagem.Text = Texto or "MoscaMenu"
+	Mensagem.TextColor3 = Color3.fromRGB(235, 235, 235)
+	Mensagem.TextTransparency = 0.02
+	Mensagem.Font = Enum.Font.GothamBold
+	Mensagem.TextSize = 13
+	Mensagem.TextWrapped = true
+	Mensagem.TextXAlignment = Enum.TextXAlignment.Left
+	Mensagem.TextYAlignment = Enum.TextYAlignment.Top
+	Mensagem.Parent = Caixa
+
+	Caixa.Position = UDim2.new(0.5, 0, 0, -120)
+
+	Caixa:TweenPosition(
+		UDim2.new(0.5, 0, 0, 35),
+		Enum.EasingDirection.Out,
+		Enum.EasingStyle.Quad,
+		0.25,
+		true
+	)
+
+	task.delay(5, function()
+		if Gui and Gui.Parent then
+			Caixa:TweenPosition(
+				UDim2.new(0.5, 0, 0, -120),
+				Enum.EasingDirection.In,
+				Enum.EasingStyle.Quad,
+				0.25,
+				true
+			)
+
+			task.wait(0.3)
+
+			if Gui and Gui.Parent then
+				Gui:Destroy()
+			end
+		end
+	end)
+end
+
+RemoteSalario.OnClientEvent:Connect(function(...)
+	local Argumentos = {...}
+	local TextoFinal = "MoscaMenu"
+
+	if typeof(Argumentos[1]) == "string" and Argumentos[1] ~= "" then
+		TextoFinal = Argumentos[1]
+	elseif typeof(Argumentos[2]) == "string" and Argumentos[2] ~= "" then
+		TextoFinal = Argumentos[2]
+	end
+
+	CriarNotificacaoSalario(TextoFinal)
+end)
+
 local Paginas = {}
 
 local function CriarPagina(Nome, Scroll)
@@ -255,17 +407,6 @@ CriarBotaoMenu("Times")
 CriarBotaoMenu("Player")
 CriarBotaoMenu("TP")
 CriarBotaoMenu("Visual")
-
-local function AplicarGradiente(Objeto)
-	local Gradiente = Instance.new("UIGradient")
-	Gradiente.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 60)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(44, 44, 44)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 32, 42))
-	})
-	Gradiente.Rotation = 90
-	Gradiente.Parent = Objeto
-end
 
 local function CriarTitulo(Parent, Texto)
 	local Label = Instance.new("TextLabel")
