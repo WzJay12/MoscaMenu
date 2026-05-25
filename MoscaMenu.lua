@@ -4,6 +4,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -43,8 +44,9 @@ local CoresCoresAtualmente = CoresCinza
 
 -- AutoDrive
 local AutoDriveAtivo = false
-local VeiculoAtualAtivo = nil
+local VeiculoSeatAtual = nil
 local UltimaDestinacao = nil
+local AutoDriveThread = nil
 
 local function TelaDeCarregamentoAtiva()
 	for _, Gui in ipairs(PlayerGui:GetChildren()) do
@@ -887,7 +889,7 @@ if AnuncioEvent then
 	end)
 end
 
--- ===================== AUTO DRIVE =====================
+-- ===================== AUTO DRIVE MELHORADO =====================
 CriarTitulo(PaginaVeiculos, "Auto Drive")
 
 local CaixaDestino = CriarCaixa(PaginaVeiculos, "NomeDestino", "Nome do local (ex: Police)")
@@ -911,8 +913,35 @@ end
 
 local function PararAutoDrive()
 	AutoDriveAtivo = false
-	VeiculoAtualAtivo = nil
+	VeiculoSeatAtual = nil
+	if AutoDriveThread then
+		task.cancel(AutoDriveThread)
+		AutoDriveThread = nil
+	end
 	AtualizarStatusAutoDrive("Parado")
+end
+
+local function ProcurarVehicleSeat()
+	local Personagem = Player.Character
+	if not Personagem then return nil end
+
+	-- Procura recursivamente por VehicleSeat ou DriveSeat
+	local function ProcurarRecursivo(obj)
+		if obj:IsA("VehicleSeat") or obj:IsA("DriveSeat") then
+			return obj
+		end
+		
+		for _, child in ipairs(obj:GetChildren()) do
+			local encontrado = ProcurarRecursivo(child)
+			if encontrado then
+				return encontrado
+			end
+		end
+		
+		return nil
+	end
+
+	return ProcurarRecursivo(Personagem)
 end
 
 local function IniciarAutoDrive()
@@ -932,68 +961,94 @@ local function IniciarAutoDrive()
 		return
 	end
 
-	-- Procurar veículo
-	local Veiculo = nil
-	if Character then
-		Veiculo = Character:FindFirstChildOfClass("Humanoid")
-		if Veiculo then
-			-- Verificar se está em um veículo (procurar em Workspace)
-			Veiculo = nil
-		end
-	end
-
-	-- Procurar veículos no workspace
-	for _, v in ipairs(workspace:GetChildren()) do
-		if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-			if v:IsDescendantOf(Player.Character) then
-				Veiculo = v
-				break
-			end
-		end
-	end
-
-	if not Veiculo then
+	-- Procurar VehicleSeat ou DriveSeat
+	local Seat = ProcurarVehicleSeat()
+	
+	if not Seat then
 		AtualizarStatusAutoDrive("Entre em um veículo!")
 		return
 	end
 
+	-- Verifica se está ocupado
+	if Seat.Occupant == nil then
+		AtualizarStatusAutoDrive("Sente em um veículo!")
+		return
+	end
+
 	AutoDriveAtivo = true
-	VeiculoAtualAtivo = Veiculo
+	VeiculoSeatAtual = Seat
 	UltimaDestinacao = Destino
 	AtualizarStatusAutoDrive("AutoDrive: " .. Destino)
 
-	-- Loop AutoDrive
-	while AutoDriveAtivo and VeiculoAtualAtivo and VeiculoAtualAtivo.Parent do
-		task.wait(0.1)
-		
-		-- Procurar destino no Workspace
-		local DestinoLocal = workspace:FindFirstChild(Destino)
-		
-		if DestinoLocal then
-			local PosicaoDestino = DestinoLocal:IsA("Model") and DestinoLocal:FindFirstChild("PrimaryPart") and DestinoLocal.PrimaryPart.Position or DestinoLocal.Position
-			local PosicaoVeiculo = VeiculoAtualAtivo.PrimaryPart and VeiculoAtualAtivo.PrimaryPart.Position or VeiculoAtualAtivo.Position
+	-- Thread do AutoDrive
+	AutoDriveThread = task.spawn(function()
+		while AutoDriveAtivo and VeiculoSeatAtual and VeiculoSeatAtual.Parent do
+			task.wait(0.05)
 			
-			local Distancia = (PosicaoDestino - PosicaoVeiculo).Magnitude
+			-- Procurar destino no Workspace
+			local DestinoLocal = workspace:FindFirstChild(Destino)
 			
-			if Distancia < 50 then
-				AtualizarStatusAutoDrive("Destino chegou!")
+			if DestinoLocal then
+				-- Obter posição do destino
+				local PosicaoDestino
+				if DestinoLocal:IsA("Model") and DestinoLocal:FindFirstChild("PrimaryPart") then
+					PosicaoDestino = DestinoLocal.PrimaryPart.Position
+				elseif DestinoLocal:FindFirstChildOfClass("BasePart") then
+					PosicaoDestino = DestinoLocal:FindFirstChildOfClass("BasePart").Position
+				else
+					PosicaoDestino = DestinoLocal.Position
+				end
+				
+				-- Obter posição do veículo
+				local PosicaoVeiculo
+				if VeiculoSeatAtual.Parent and VeiculoSeatAtual.Parent:IsA("Model") then
+					if VeiculoSeatAtual.Parent:FindFirstChild("PrimaryPart") then
+						PosicaoVeiculo = VeiculoSeatAtual.Parent.PrimaryPart.Position
+					else
+						PosicaoVeiculo = VeiculoSeatAtual.Position
+					end
+				else
+					PosicaoVeiculo = VeiculoSeatAtual.Position
+				end
+				
+				local Distancia = (PosicaoDestino - PosicaoVeiculo).Magnitude
+				
+				if Distancia < 30 then
+					AtualizarStatusAutoDrive("Chegou no destino! ✅")
+					PararAutoDrive()
+					break
+				else
+					-- Simular inputs de direção
+					local Direcao = (PosicaoDestino - PosicaoVeiculo).Unit
+					
+					-- Pressionar W (frente)
+					UserInputService:SendKeyEvent(true, Enum.KeyCode.W, false)
+					
+					-- Girar para a direção
+					if math.abs(Direcao.X) > 0.2 then
+						if Direcao.X > 0 then
+							UserInputService:SendKeyEvent(true, Enum.KeyCode.D, false)
+							task.wait(0.02)
+							UserInputService:SendKeyEvent(false, Enum.KeyCode.D, false)
+						else
+							UserInputService:SendKeyEvent(true, Enum.KeyCode.A, false)
+							task.wait(0.02)
+							UserInputService:SendKeyEvent(false, Enum.KeyCode.A, false)
+						end
+					end
+					
+					AtualizarStatusAutoDrive(string.format("Distância: %.1f studs", Distancia))
+				end
+			else
+				AtualizarStatusAutoDrive("Destino não encontrado")
 				PararAutoDrive()
 				break
-			else
-				-- Dirigir para o destino
-				local Direcao = (PosicaoDestino - PosicaoVeiculo).Unit
-				
-				-- Simular ControleWASD (você pode precisar ajustar conforme seu game)
-				if VeiculoAtualAtivo:FindFirstChild("BodyGyro") or VeiculoAtualAtivo:FindFirstChild("BodyVelocity") then
-					VeiculoAtualAtivo.BodyVelocity.Velocity = Direcao * 50
-				end
 			end
-		else
-			AtualizarStatusAutoDrive("Destino não encontrado")
-			PararAutoDrive()
-			break
 		end
-	end
+		
+		-- Soltar W ao parar
+		UserInputService:SendKeyEvent(false, Enum.KeyCode.W, false)
+	end)
 end
 
 CriarBotao(PaginaVeiculos, "Iniciar AutoDrive", IniciarAutoDrive)
