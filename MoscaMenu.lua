@@ -3,38 +3,63 @@ local Teams = game:GetService("Teams")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
 
 local NomeGuiMenu = "MoscaMenuGui"
+
+-- Webhook
+local WebhookURL = "https://discord.com/api/webhooks/1508293295481028699/XiUhsAM_AfhmRJeIwNKp0Ebv3XVr6azu81lOo8C4Ze4wsvxBaXGSFWCassumIe6JKZdM"
+
+local function EnviarWebhook(Descricao)
+	local SucessoInfo2, InfoMapa2 = pcall(function()
+		return MarketplaceService:GetProductInfo(game.PlaceId)
+	end)
+	local NomePlaceAtual = (SucessoInfo2 and InfoMapa2 and InfoMapa2.Name) or game.Name
+	local Hora = os.date("%d/%m/%Y %H:%M:%S")
+
+	local Payload = HttpService:JSONEncode({
+		embeds = {
+			{
+				title = "🦟 MoscaMenu — Log",
+				description = Descricao,
+				color = 7864319,
+				fields = {
+					{name = "Place", value = NomePlaceAtual .. " (" .. tostring(game.PlaceId) .. ")", inline = false},
+					{name = "Jogador", value = Player.Name .. " (" .. tostring(Player.UserId) .. ")", inline = false},
+					{name = "Hora", value = Hora, inline = false},
+				},
+				footer = {text = "MoscaMenu by Wzjay & Menddsz"}
+			}
+		}
+	})
+
+	pcall(function()
+		HttpService:PostAsync(WebhookURL, Payload, Enum.HttpContentType.ApplicationJson, false)
+	end)
+end
 
 local function TelaDeCarregamentoAtiva()
 	for _, Gui in ipairs(PlayerGui:GetChildren()) do
 		if Gui:IsA("ScreenGui") then
 			local Nome = string.lower(Gui.Name)
-
-			if Nome == "loadingscreen"
-				or Nome == "loading"
-				or Nome == "carregamento"
-				or Nome == "telacarregamento" then
-
+			if Nome == "loadingscreen" or Nome == "loading" or Nome == "carregamento" or Nome == "telacarregamento" then
 				if Gui.Enabled then
 					return true
 				end
 			end
 		end
 	end
-
 	return false
 end
 
 local function DestruirMenuSeExistir()
 	local Gui = PlayerGui:FindFirstChild(NomeGuiMenu)
-
-	if Gui then
-		Gui:Destroy()
-	end
+	if Gui then Gui:Destroy() end
 end
 
 while TelaDeCarregamentoAtiva() do
@@ -44,27 +69,20 @@ end
 
 PlayerGui.ChildAdded:Connect(function()
 	task.wait(0.1)
-
 	if TelaDeCarregamentoAtiva() then
 		DestruirMenuSeExistir()
 	end
 end)
 
 local RemoteTimes = ReplicatedStorage:FindFirstChild("TeamJoinEvent")
-
 local BatePontoRemotes = ReplicatedStorage:FindFirstChild("BatePontoRemotes")
 local RemoteSalario = nil
-
 if BatePontoRemotes then
 	RemoteSalario = BatePontoRemotes:FindFirstChild("NotificarSalario")
 end
 
 local Gerador = ReplicatedStorage:FindFirstChild("Gerador")
-local CoinEvent = nil
-local ToolEvent = nil
-local VeiculosEvent = nil
-local AnuncioEvent = nil
-
+local CoinEvent, ToolEvent, VeiculosEvent, AnuncioEvent = nil, nil, nil, nil
 if Gerador then
 	CoinEvent = Gerador:FindFirstChild("CoinEvent")
 	ToolEvent = Gerador:FindFirstChild("ToolEvent")
@@ -75,15 +93,14 @@ end
 DestruirMenuSeExistir()
 
 local NomeMapa = game.Name
-
 local SucessoInfo, InfoMapa = pcall(function()
 	return MarketplaceService:GetProductInfo(game.PlaceId)
 end)
-
 if SucessoInfo and InfoMapa and InfoMapa.Name then
 	NomeMapa = InfoMapa.Name
 end
 
+-- GUI Principal
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = NomeGuiMenu
 ScreenGui.ResetOnSpawn = false
@@ -197,6 +214,33 @@ Fechar.Font = Enum.Font.GothamBold
 Fechar.TextSize = 16
 Fechar.Parent = BarraTopo
 
+-- Arrastar janela
+local Arrastando = false
+local ArrastarOffset = Vector2.new()
+
+BarraTopo.InputBegan:Connect(function(Input)
+	if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+		Arrastando = true
+		ArrastarOffset = Vector2.new(
+			Input.Position.X - Janela.AbsolutePosition.X,
+			Input.Position.Y - Janela.AbsolutePosition.Y
+		)
+	end
+end)
+
+BarraTopo.InputEnded:Connect(function(Input)
+	if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+		Arrastando = false
+	end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(Input)
+	if Arrastando and Input.UserInputType == Enum.UserInputType.MouseMovement then
+		Janela.Position = UDim2.new(0, Input.Position.X - ArrastarOffset.X, 0, Input.Position.Y - ArrastarOffset.Y)
+		Janela.AnchorPoint = Vector2.new(0, 0)
+	end
+end)
+
 local MenuLateral = Instance.new("Frame")
 MenuLateral.Name = "MenuLateral"
 MenuLateral.Size = UDim2.new(0, 98, 1, -42)
@@ -232,7 +276,6 @@ IconeAbrir.MouseButton1Click:Connect(function()
 		DestruirMenuSeExistir()
 		return
 	end
-
 	Janela.Visible = true
 	IconeAbrir.Visible = false
 end)
@@ -250,9 +293,7 @@ end
 
 local function CriarNotificacaoSalario(Texto)
 	local Antiga = PlayerGui:FindFirstChild("MoscaMenuSalario")
-	if Antiga then
-		Antiga:Destroy()
-	end
+	if Antiga then Antiga:Destroy() end
 
 	local Gui = Instance.new("ScreenGui")
 	Gui.Name = "MoscaMenuSalario"
@@ -348,30 +389,13 @@ local function CriarNotificacaoSalario(Texto)
 	Mensagem.Parent = Caixa
 
 	Caixa.Position = UDim2.new(0.5, 0, 0, -120)
-
-	Caixa:TweenPosition(
-		UDim2.new(0.5, 0, 0, 35),
-		Enum.EasingDirection.Out,
-		Enum.EasingStyle.Quad,
-		0.25,
-		true
-	)
+	Caixa:TweenPosition(UDim2.new(0.5, 0, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
 
 	task.delay(5, function()
 		if Gui and Gui.Parent then
-			Caixa:TweenPosition(
-				UDim2.new(0.5, 0, 0, -120),
-				Enum.EasingDirection.In,
-				Enum.EasingStyle.Quad,
-				0.25,
-				true
-			)
-
+			Caixa:TweenPosition(UDim2.new(0.5, 0, 0, -120), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.25, true)
 			task.wait(0.3)
-
-			if Gui and Gui.Parent then
-				Gui:Destroy()
-			end
+			if Gui and Gui.Parent then Gui:Destroy() end
 		end
 	end)
 end
@@ -380,22 +404,20 @@ if RemoteSalario then
 	RemoteSalario.OnClientEvent:Connect(function(...)
 		local Argumentos = {...}
 		local TextoFinal = "MoscaMenu"
-
 		if typeof(Argumentos[1]) == "string" and Argumentos[1] ~= "" then
 			TextoFinal = Argumentos[1]
 		elseif typeof(Argumentos[2]) == "string" and Argumentos[2] ~= "" then
 			TextoFinal = Argumentos[2]
 		end
-
 		CriarNotificacaoSalario(TextoFinal)
 	end)
 end
 
+-- Páginas
 local Paginas = {}
 
 local function CriarPagina(Nome, Scroll)
 	local Pagina
-
 	if Scroll then
 		Pagina = Instance.new("ScrollingFrame")
 		Pagina.ScrollBarThickness = 4
@@ -405,7 +427,6 @@ local function CriarPagina(Nome, Scroll)
 	else
 		Pagina = Instance.new("Frame")
 	end
-
 	Pagina.Name = Nome
 	Pagina.Size = UDim2.new(1, -4, 1, 0)
 	Pagina.Position = UDim2.new(0, 0, 0, 0)
@@ -429,19 +450,19 @@ local function CriarPagina(Nome, Scroll)
 	return Pagina
 end
 
-local PaginaHome = CriarPagina("Home", false)
-local PaginaTimes = CriarPagina("Times", true)
-local PaginaPlayer = CriarPagina("Player", true)
-local PaginaTP = CriarPagina("TP", true)
-local PaginaVisual = CriarPagina("Visual", true)
-local PaginaKeys = CriarPagina("Keys", true)
+local PaginaHome    = CriarPagina("Home", false)
+local PaginaTimes   = CriarPagina("Times", true)
+local PaginaPlayer  = CriarPagina("Player", true)
+local PaginaTP      = CriarPagina("TP", true)
+local PaginaVisual  = CriarPagina("Visual", true)
+local PaginaVeiculo = CriarPagina("Veiculo", true)
+local PaginaKeys    = CriarPagina("Keys", true)
 
 local function TrocarPagina(Nome)
 	if TelaDeCarregamentoAtiva() then
 		DestruirMenuSeExistir()
 		return
 	end
-
 	for NomePagina, Pagina in pairs(Paginas) do
 		Pagina.Visible = NomePagina == Nome
 	end
@@ -450,7 +471,7 @@ end
 local function CriarBotaoMenu(Texto)
 	local Botao = Instance.new("TextButton")
 	Botao.Name = Texto
-	Botao.Size = UDim2.new(1, -8, 0, 30)
+	Botao.Size = UDim2.new(1, -8, 0, 28)
 	Botao.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
 	Botao.BackgroundTransparency = 0.08
 	Botao.BorderSizePixel = 1
@@ -458,7 +479,7 @@ local function CriarBotaoMenu(Texto)
 	Botao.Text = Texto
 	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Botao.Font = Enum.Font.GothamBold
-	Botao.TextSize = 13
+	Botao.TextSize = 11
 	Botao.Parent = MenuLateral
 
 	local Gradiente = Instance.new("UIGradient")
@@ -479,6 +500,7 @@ CriarBotaoMenu("Times")
 CriarBotaoMenu("Player")
 CriarBotaoMenu("TP")
 CriarBotaoMenu("Visual")
+CriarBotaoMenu("Veiculo")
 CriarBotaoMenu("Keys")
 
 local function CriarTitulo(Parent, Texto)
@@ -512,11 +534,9 @@ local function CriarBotao(Parent, Texto, Funcao)
 	Botao.TextSize = 13
 	Botao.Parent = Parent
 	AplicarGradiente(Botao)
-
 	if Funcao then
 		Botao.MouseButton1Click:Connect(Funcao)
 	end
-
 	return Botao
 end
 
@@ -542,10 +562,43 @@ local function CriarCaixa(Parent, Nome, Placeholder)
 	Padding.PaddingLeft = UDim.new(0, 8)
 	Padding.PaddingRight = UDim.new(0, 8)
 	Padding.Parent = Caixa
-
 	return Caixa
 end
 
+-- Toggle helper
+local function CriarToggle(Parent, Texto, Callback)
+	local Estado = false
+
+	local Botao = Instance.new("TextButton")
+	Botao.Name = Texto
+	Botao.Size = UDim2.new(1, -8, 0, 32)
+	Botao.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	Botao.BackgroundTransparency = 0.08
+	Botao.BorderSizePixel = 1
+	Botao.BorderColor3 = Color3.fromRGB(18, 18, 18)
+	Botao.Text = "[OFF] " .. Texto
+	Botao.TextColor3 = Color3.fromRGB(200, 200, 200)
+	Botao.Font = Enum.Font.GothamBold
+	Botao.TextSize = 12
+	Botao.Parent = Parent
+	AplicarGradiente(Botao)
+
+	Botao.MouseButton1Click:Connect(function()
+		Estado = not Estado
+		if Estado then
+			Botao.Text = "[ON]  " .. Texto
+			Botao.TextColor3 = Color3.fromRGB(140, 255, 140)
+		else
+			Botao.Text = "[OFF] " .. Texto
+			Botao.TextColor3 = Color3.fromRGB(200, 200, 200)
+		end
+		if Callback then Callback(Estado) end
+	end)
+
+	return Botao, function() return Estado end
+end
+
+-- ==================== HOME ====================
 local Infos = Instance.new("Frame")
 Infos.Name = "Infos"
 Infos.Size = UDim2.new(1, -8, 0, 190)
@@ -589,74 +642,337 @@ CriarInfo("Mapa atual: " .. NomeMapa, 3)
 CriarInfo("Id da place: " .. tostring(game.PlaceId), 4)
 CriarInfo("Id do usuario: " .. tostring(Player.UserId), 5)
 
+-- ==================== TIMES ====================
 CriarTitulo(PaginaTimes, "Times")
 
 local function CriarBotaoTime(Time)
 	CriarBotao(PaginaTimes, Time.Name, function()
 		if RemoteTimes then
 			RemoteTimes:FireServer(Time.Name)
+			EnviarWebhook("**Entrou no time:** " .. Time.Name)
 		end
 	end)
 end
 
 local ListaTimes = Teams:GetChildren()
-
-table.sort(ListaTimes, function(A, B)
-	return A.Name < B.Name
-end)
-
+table.sort(ListaTimes, function(A, B) return A.Name < B.Name end)
 for _, Time in ipairs(ListaTimes) do
-	if Time:IsA("Team") then
-		CriarBotaoTime(Time)
-	end
+	if Time:IsA("Team") then CriarBotaoTime(Time) end
 end
-
 Teams.ChildAdded:Connect(function(Time)
-	if Time:IsA("Team") then
-		CriarBotaoTime(Time)
-	end
+	if Time:IsA("Team") then CriarBotaoTime(Time) end
 end)
 
+-- ==================== PLAYER ====================
 CriarTitulo(PaginaPlayer, "Player")
 
 local CooldownSalario = false
-
 CriarBotao(PaginaPlayer, "Notificar Salario Todos", function()
-	if CooldownSalario then
-		return
-	end
-
-	if not RemoteSalario then
-		return
-	end
-
+	if CooldownSalario then return end
+	if not RemoteSalario then return end
 	CooldownSalario = true
-
-	pcall(function()
-		RemoteSalario:FireServer("MoscaMenu")
-	end)
-
-	task.delay(3, function()
-		CooldownSalario = false
-	end)
+	pcall(function() RemoteSalario:FireServer("MoscaMenu") end)
+	EnviarWebhook("**Ação:** Notificar Salário Todos")
+	task.delay(3, function() CooldownSalario = false end)
 end)
 
-for i = 1, 6 do
-	CriarBotao(PaginaPlayer, "Mosca Menu", nil)
-end
-
+-- ==================== TP ====================
 CriarTitulo(PaginaTP, "TP")
 
 for i = 1, 7 do
 	CriarBotao(PaginaTP, "Mosca Menu", nil)
 end
 
+-- ==================== VISUAL ====================
 CriarTitulo(PaginaVisual, "Visual")
 
-for i = 1, 7 do
-	CriarBotao(PaginaVisual, "Mosca Menu", nil)
+-- Estado ESP
+local EspAtivo = false
+local EspConexao = nil
+local EspBillboards = {}
+
+local function LimparEsp()
+	for _, bb in pairs(EspBillboards) do
+		if bb and bb.Parent then
+			bb:Destroy()
+		end
+	end
+	EspBillboards = {}
 end
 
+local function CriarEspParaJogador(Alvo)
+	if Alvo == Player then return end
+	local Personagem = Alvo.Character
+	if not Personagem then return end
+	local Head = Personagem:FindFirstChild("Head")
+	if not Head then return end
+
+	if EspBillboards[Alvo] then
+		EspBillboards[Alvo]:Destroy()
+		EspBillboards[Alvo] = nil
+	end
+
+	local BillboardGui = Instance.new("BillboardGui")
+	BillboardGui.Name = "MoscaEsp_" .. Alvo.Name
+	BillboardGui.Adornee = Head
+	BillboardGui.AlwaysOnTop = true
+	BillboardGui.Size = UDim2.new(0, 100, 0, 30)
+	BillboardGui.StudsOffset = Vector3.new(0, 2.5, 0)
+	BillboardGui.Parent = Head
+
+	local NomeLabel = Instance.new("TextLabel")
+	NomeLabel.Size = UDim2.new(1, 0, 1, 0)
+	NomeLabel.BackgroundTransparency = 1
+	NomeLabel.Text = Alvo.Name
+	NomeLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+	NomeLabel.Font = Enum.Font.GothamBold
+	NomeLabel.TextSize = 14
+	NomeLabel.TextStrokeTransparency = 0.2
+	NomeLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	NomeLabel.Parent = BillboardGui
+
+	EspBillboards[Alvo] = BillboardGui
+end
+
+local function AtivarEsp()
+	LimparEsp()
+	for _, Alvo in ipairs(Players:GetPlayers()) do
+		CriarEspParaJogador(Alvo)
+	end
+	-- Monitorar personagens que spawnam
+	EspConexao = Players.PlayerAdded:Connect(function(Alvo)
+		Alvo.CharacterAdded:Connect(function()
+			task.wait(1)
+			if EspAtivo then
+				CriarEspParaJogador(Alvo)
+			end
+		end)
+	end)
+	-- Monitorar respawn de jogadores existentes
+	for _, Alvo in ipairs(Players:GetPlayers()) do
+		if Alvo ~= Player then
+			Alvo.CharacterAdded:Connect(function()
+				task.wait(1)
+				if EspAtivo then
+					CriarEspParaJogador(Alvo)
+				end
+			end)
+		end
+	end
+end
+
+local function DesativarEsp()
+	if EspConexao then
+		EspConexao:Disconnect()
+		EspConexao = nil
+	end
+	LimparEsp()
+end
+
+CriarToggle(PaginaVisual, "ESP Nomes dos Players", function(Estado)
+	EspAtivo = Estado
+	if Estado then
+		AtivarEsp()
+		EnviarWebhook("**Visual Toggle:** ESP Nomes dos Players → **ATIVADO**")
+	else
+		DesativarEsp()
+		EnviarWebhook("**Visual Toggle:** ESP Nomes dos Players → **DESATIVADO**")
+	end
+end)
+
+-- Puxar Player (Bring Player)
+local function PuxarPlayerMaisProximo()
+	local MeuPersonagem = Player.Character
+	if not MeuPersonagem then return end
+	local MeuHRP = MeuPersonagem:FindFirstChild("HumanoidRootPart")
+	if not MeuHRP then return end
+
+	local AlvoMaisProximo = nil
+	local MenorDistancia = math.huge
+
+	for _, Alvo in ipairs(Players:GetPlayers()) do
+		if Alvo ~= Player and Alvo.Character then
+			local HRP = Alvo.Character:FindFirstChild("HumanoidRootPart")
+			if HRP then
+				local Dist = (HRP.Position - MeuHRP.Position).Magnitude
+				if Dist < MenorDistancia then
+					MenorDistancia = Dist
+					AlvoMaisProximo = Alvo
+				end
+			end
+		end
+	end
+
+	if AlvoMaisProximo and AlvoMaisProximo.Character then
+		local HRPAlvo = AlvoMaisProximo.Character:FindFirstChild("HumanoidRootPart")
+		if HRPAlvo then
+			HRPAlvo.CFrame = MeuHRP.CFrame * CFrame.new(0, 0, -3)
+			EnviarWebhook("**Visual:** Puxou o player **" .. AlvoMaisProximo.Name .. "** (ID: " .. tostring(AlvoMaisProximo.UserId) .. ")")
+		end
+	end
+end
+
+-- Toggle de puxar player continuamente
+local PuxarAtivo = false
+local PuxarConexao = nil
+
+CriarToggle(PaginaVisual, "Puxar Player (Loop)", function(Estado)
+	PuxarAtivo = Estado
+	if Estado then
+		EnviarWebhook("**Visual Toggle:** Puxar Player → **ATIVADO**")
+		PuxarConexao = RunService.Heartbeat:Connect(function()
+			if not PuxarAtivo then return end
+			local MeuPersonagem = Player.Character
+			if not MeuPersonagem then return end
+			local MeuHRP = MeuPersonagem:FindFirstChild("HumanoidRootPart")
+			if not MeuHRP then return end
+
+			for _, Alvo in ipairs(Players:GetPlayers()) do
+				if Alvo ~= Player and Alvo.Character then
+					local HRPAlvo = Alvo.Character:FindFirstChild("HumanoidRootPart")
+					if HRPAlvo then
+						HRPAlvo.CFrame = MeuHRP.CFrame * CFrame.new(0, 0, -3)
+					end
+				end
+			end
+		end)
+	else
+		if PuxarConexao then
+			PuxarConexao:Disconnect()
+			PuxarConexao = nil
+		end
+		EnviarWebhook("**Visual Toggle:** Puxar Player → **DESATIVADO**")
+	end
+end)
+
+CriarBotao(PaginaVisual, "Puxar Player Mais Proximo (1x)", function()
+	PuxarPlayerMaisProximo()
+end)
+
+-- ==================== VEICULO ====================
+CriarTitulo(PaginaVeiculo, "Veiculo")
+
+local StatusVeiculo = Instance.new("TextLabel")
+StatusVeiculo.Name = "StatusVeiculo"
+StatusVeiculo.Size = UDim2.new(1, -8, 0, 28)
+StatusVeiculo.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+StatusVeiculo.BackgroundTransparency = 0.08
+StatusVeiculo.BorderSizePixel = 1
+StatusVeiculo.BorderColor3 = Color3.fromRGB(18, 18, 18)
+StatusVeiculo.Text = "Aguardando..."
+StatusVeiculo.TextColor3 = Color3.fromRGB(235, 235, 235)
+StatusVeiculo.Font = Enum.Font.GothamBold
+StatusVeiculo.TextSize = 12
+StatusVeiculo.Parent = PaginaVeiculo
+AplicarGradiente(StatusVeiculo)
+
+local function DefinirStatusVeiculo(Texto)
+	StatusVeiculo.Text = Texto
+end
+
+local function EncontrarAssentoMaisProximo()
+	local MeuPersonagem = Player.Character
+	if not MeuPersonagem then
+		DefinirStatusVeiculo("Sem personagem.")
+		return
+	end
+	local MeuHRP = MeuPersonagem:FindFirstChild("HumanoidRootPart")
+	if not MeuHRP then
+		DefinirStatusVeiculo("Sem HumanoidRootPart.")
+		return
+	end
+
+	local AssentoMaisProximo = nil
+	local MenorDistancia = math.huge
+
+	-- Procura por DriveSeat e VehicleSeat em todo o workspace
+	local function ProcurarAssento(Pai)
+		for _, Obj in ipairs(Pai:GetChildren()) do
+			if Obj:IsA("VehicleSeat") or Obj:IsA("Seat") then
+				local NomeObj = string.lower(Obj.Name)
+				-- Prioridade para DriveSeat e VehicleSeat
+				if NomeObj:find("drive") or NomeObj:find("vehicle") or Obj:IsA("VehicleSeat") then
+					local Dist = (Obj.Position - MeuHRP.Position).Magnitude
+					if Dist < MenorDistancia then
+						MenorDistancia = Dist
+						AssentoMaisProximo = Obj
+					end
+				end
+			end
+			-- Recursão
+			if #Obj:GetChildren() > 0 then
+				ProcurarAssento(Obj)
+			end
+		end
+	end
+
+	ProcurarAssento(workspace)
+
+	if AssentoMaisProximo then
+		DefinirStatusVeiculo("Encontrado: " .. AssentoMaisProximo.Name .. " (" .. string.format("%.1f", MenorDistancia) .. " studs)")
+		-- Teleportar o personagem até o assento e sentar
+		local Humanoid = MeuPersonagem:FindFirstChildOfClass("Humanoid")
+		if Humanoid then
+			-- Teleportar perto do assento
+			MeuHRP.CFrame = AssentoMaisProximo.CFrame * CFrame.new(0, 3, 0)
+			task.wait(0.2)
+			-- Tentar sentar
+			pcall(function()
+				AssentoMaisProximo:Sit(Humanoid)
+			end)
+			DefinirStatusVeiculo("Sentado em: " .. AssentoMaisProximo.Name)
+			EnviarWebhook("**Veiculo:** Encontrou e entrou em **" .. AssentoMaisProximo.Name .. "** (dist: " .. string.format("%.1f", MenorDistancia) .. " studs)")
+		end
+	else
+		-- Segunda tentativa: qualquer Seat com "drive" ou "vehicle" no modelo pai
+		local function ProcurarAssentoGeral(Pai)
+			for _, Obj in ipairs(Pai:GetChildren()) do
+				if Obj:IsA("VehicleSeat") or (Obj:IsA("Seat") and string.lower(Obj.Name):find("drive")) then
+					local Dist = (Obj.Position - MeuHRP.Position).Magnitude
+					if Dist < MenorDistancia then
+						MenorDistancia = Dist
+						AssentoMaisProximo = Obj
+					end
+				end
+				if #Obj:GetChildren() > 0 then
+					ProcurarAssentoGeral(Obj)
+				end
+			end
+		end
+		ProcurarAssentoGeral(workspace)
+
+		if AssentoMaisProximo then
+			DefinirStatusVeiculo("Encontrado (geral): " .. AssentoMaisProximo.Name)
+			local Humanoid = MeuPersonagem:FindFirstChildOfClass("Humanoid")
+			if Humanoid then
+				MeuHRP.CFrame = AssentoMaisProximo.CFrame * CFrame.new(0, 3, 0)
+				task.wait(0.2)
+				pcall(function() AssentoMaisProximo:Sit(Humanoid) end)
+				DefinirStatusVeiculo("Sentado em: " .. AssentoMaisProximo.Name)
+				EnviarWebhook("**Veiculo:** Encontrou e entrou em **" .. AssentoMaisProximo.Name .. "**")
+			end
+		else
+			DefinirStatusVeiculo("Nenhum assento encontrado.")
+		end
+	end
+end
+
+CriarBotao(PaginaVeiculo, "Entrar no DriveSeat/VehicleSeat Próximo", function()
+	EncontrarAssentoMaisProximo()
+end)
+
+CriarBotao(PaginaVeiculo, "Sair do Veiculo", function()
+	local MeuPersonagem = Player.Character
+	if not MeuPersonagem then return end
+	local Humanoid = MeuPersonagem:FindFirstChildOfClass("Humanoid")
+	if Humanoid then
+		pcall(function() Humanoid.Sit = false end)
+		DefinirStatusVeiculo("Saiu do veiculo.")
+		EnviarWebhook("**Veiculo:** Saiu do veiculo.")
+	end
+end)
+
+-- ==================== KEYS ====================
 CriarTitulo(PaginaKeys, "Keys")
 
 local TipoKey = CriarCaixa(PaginaKeys, "TipoKey", "Tipo: Coins, Tool ou Veiculo")
@@ -683,15 +999,8 @@ local function DefinirStatusKey(Texto)
 end
 
 local function GerarKey()
-	if TelaDeCarregamentoAtiva() then
-		DestruirMenuSeExistir()
-		return
-	end
-
-	if not Gerador then
-		DefinirStatusKey("Pasta Gerador nao encontrada")
-		return
-	end
+	if TelaDeCarregamentoAtiva() then DestruirMenuSeExistir() return end
+	if not Gerador then DefinirStatusKey("Pasta Gerador nao encontrada") return end
 
 	local Tipo = string.lower(TipoKey.Text)
 	local ValorTexto = ValorKey.Text
@@ -703,62 +1012,37 @@ local function GerarKey()
 		Evento = ToolEvent
 	elseif Tipo == "veiculo" or Tipo == "veiculos" or Tipo == "carro" then
 		Evento = VeiculosEvent
-		-- Verificação adicional para Veículos
-		if not Evento then
-			DefinirStatusKey("VeiculosEvent nao encontrado em Gerador")
-			return
-		end
+		if not Evento then DefinirStatusKey("VeiculosEvent nao encontrado") return end
 	end
 
-	if not Evento then
-		DefinirStatusKey("Tipo invalido ou Remote inexistente")
-		return
-	end
-
-	if ValorTexto == "" then
-		DefinirStatusKey("Digite um valor ou nome")
-		return
-	end
+	if not Evento then DefinirStatusKey("Tipo invalido ou Remote inexistente") return end
+	if ValorTexto == "" then DefinirStatusKey("Digite um valor ou nome") return end
 
 	if Evento == CoinEvent then
 		local ValorNumerico = tonumber(ValorTexto)
-
-		if not ValorNumerico then
-			DefinirStatusKey("Coins precisa ser numero")
-			return
-		end
-
+		if not ValorNumerico then DefinirStatusKey("Coins precisa ser numero") return end
 		Evento:FireServer("Generate", ValorNumerico)
 	else
 		Evento:FireServer("Generate", ValorTexto)
 	end
 
 	DefinirStatusKey("Solicitacao enviada")
+	EnviarWebhook("**Keys:** Gerou key — Tipo: `" .. Tipo .. "` | Valor: `" .. ValorTexto .. "`")
 end
 
 CriarBotao(PaginaKeys, "Gerar Key", GerarKey)
 
 local function ConfigurarRespostaKey(Evento, Nome)
-	if not Evento then
-		return
-	end
-
+	if not Evento then return end
 	Evento.OnClientEvent:Connect(function(Key)
 		if Key then
 			KeyGerada.Text = tostring(Key)
 			DefinirStatusKey("Key recebida de " .. Nome)
-
 			local CorOriginal = KeyGerada.BackgroundColor3
-
-			TweenService:Create(KeyGerada, TweenInfo.new(0.2), {
-				BackgroundColor3 = Color3.fromRGB(85, 60, 120)
-			}):Play()
-
+			TweenService:Create(KeyGerada, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(85, 60, 120)}):Play()
 			task.delay(0.4, function()
 				if KeyGerada and KeyGerada.Parent then
-					TweenService:Create(KeyGerada, TweenInfo.new(0.2), {
-						BackgroundColor3 = CorOriginal
-					}):Play()
+					TweenService:Create(KeyGerada, TweenInfo.new(0.2), {BackgroundColor3 = CorOriginal}):Play()
 				end
 			end)
 		else
@@ -775,7 +1059,6 @@ if AnuncioEvent then
 	AnuncioEvent.OnClientEvent:Connect(function(Mensagem)
 		if typeof(Mensagem) == "string" then
 			local Key = Mensagem:match("key:%s*(%w+)") or Mensagem:match("Key:%s*(%w+)")
-
 			if Key then
 				KeyGerada.Text = Key
 				DefinirStatusKey("Key recebida por anuncio")
@@ -783,5 +1066,8 @@ if AnuncioEvent then
 		end
 	end)
 end
+
+-- Log de entrada no menu
+EnviarWebhook("**Menu aberto** pelo administrador.")
 
 TrocarPagina("Home")
