@@ -3,50 +3,11 @@ local Teams = game:GetService("Teams")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-local Character = Player.Character or Player.CharacterAdded:Wait()
 
 local NomeGuiMenu = "MoscaMenuGui"
-
--- SISTEMA DE TEMA
-local TemaAtual = "Escuro"
-local CoresCinza = {
-	Fundo = Color3.fromRGB(25, 25, 25),
-	FundoSecundario = Color3.fromRGB(45, 45, 45),
-	FundoMenuLateral = Color3.fromRGB(32, 32, 32),
-	FundoArea = Color3.fromRGB(28, 28, 28),
-	Texto = Color3.fromRGB(255, 255, 255),
-	TextoSecundario = Color3.fromRGB(235, 235, 235),
-	TextoDesativado = Color3.fromRGB(160, 160, 160),
-	Borda = Color3.fromRGB(0, 0, 0),
-	BordaBotao = Color3.fromRGB(18, 18, 18),
-	Sombra = Color3.fromRGB(105, 45, 180)
-}
-
-local CoresClaro = {
-	Fundo = Color3.fromRGB(240, 240, 245),
-	FundoSecundario = Color3.fromRGB(220, 220, 230),
-	FundoMenuLateral = Color3.fromRGB(210, 210, 225),
-	FundoArea = Color3.fromRGB(230, 230, 240),
-	Texto = Color3.fromRGB(30, 30, 50),
-	TextoSecundario = Color3.fromRGB(50, 50, 70),
-	TextoDesativado = Color3.fromRGB(120, 120, 140),
-	Borda = Color3.fromRGB(200, 200, 220),
-	BordaBotao = Color3.fromRGB(180, 180, 200),
-	Sombra = Color3.fromRGB(150, 120, 200)
-}
-
-local CoresCoresAtualmente = CoresCinza
-
--- AutoDrive
-local AutoDriveAtivo = false
-local VeiculoSeatAtual = nil
-local UltimaDestinacao = nil
-local AutoDriveThread = nil
 
 local function TelaDeCarregamentoAtiva()
 	for _, Gui in ipairs(PlayerGui:GetChildren()) do
@@ -134,10 +95,10 @@ Janela.Name = "Janela"
 Janela.AnchorPoint = Vector2.new(0.5, 0.5)
 Janela.Position = UDim2.new(0.5, 0, 0.5, 0)
 Janela.Size = UDim2.new(0, 350, 0, 250)
-Janela.BackgroundColor3 = CoresCoresAtualmente.Fundo
+Janela.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Janela.BackgroundTransparency = 0.05
 Janela.BorderSizePixel = 1
-Janela.BorderColor3 = CoresCoresAtualmente.Borda
+Janela.BorderColor3 = Color3.fromRGB(0, 0, 0)
 Janela.Parent = ScreenGui
 
 local IconeAbrir = Instance.new("TextButton")
@@ -199,7 +160,7 @@ local BarraTopo = Instance.new("Frame")
 BarraTopo.Name = "BarraTopo"
 BarraTopo.Size = UDim2.new(1, 0, 0, 32)
 BarraTopo.Position = UDim2.new(0, 0, 0, 0)
-BarraTopo.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+BarraTopo.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 BarraTopo.BackgroundTransparency = 0.15
 BarraTopo.BorderSizePixel = 0
 BarraTopo.Parent = Janela
@@ -219,7 +180,7 @@ Titulo.Size = UDim2.new(1, -45, 1, 0)
 Titulo.Position = UDim2.new(0, 8, 0, 0)
 Titulo.BackgroundTransparency = 1
 Titulo.Text = "MoscaMenu"
-Titulo.TextColor3 = CoresCoresAtualmente.Texto
+Titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
 Titulo.Font = Enum.Font.GothamBold
 Titulo.TextSize = 16
 Titulo.TextXAlignment = Enum.TextXAlignment.Left
@@ -231,7 +192,7 @@ Fechar.Size = UDim2.new(0, 32, 1, 0)
 Fechar.Position = UDim2.new(1, -34, 0, 0)
 Fechar.BackgroundTransparency = 1
 Fechar.Text = "X"
-Fechar.TextColor3 = CoresCoresAtualmente.Texto
+Fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
 Fechar.Font = Enum.Font.GothamBold
 Fechar.TextSize = 16
 Fechar.Parent = BarraTopo
@@ -240,7 +201,7 @@ local MenuLateral = Instance.new("Frame")
 MenuLateral.Name = "MenuLateral"
 MenuLateral.Size = UDim2.new(0, 98, 1, -42)
 MenuLateral.Position = UDim2.new(0, 6, 0, 38)
-MenuLateral.BackgroundColor3 = CoresCoresAtualmente.FundoMenuLateral
+MenuLateral.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
 MenuLateral.BackgroundTransparency = 0.25
 MenuLateral.BorderSizePixel = 0
 MenuLateral.Parent = Janela
@@ -256,7 +217,7 @@ local Area = Instance.new("Frame")
 Area.Name = "Area"
 Area.Size = UDim2.new(1, -120, 1, -50)
 Area.Position = UDim2.new(0, 110, 0, 38)
-Area.BackgroundColor3 = CoresCoresAtualmente.FundoArea
+Area.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
 Area.BackgroundTransparency = 0.2
 Area.BorderSizePixel = 0
 Area.Parent = Janela
@@ -304,10 +265,10 @@ local function CriarNotificacaoSalario(Texto)
 	Caixa.AnchorPoint = Vector2.new(0.5, 0)
 	Caixa.Position = UDim2.new(0.5, 0, 0, 35)
 	Caixa.Size = UDim2.new(0, 360, 0, 95)
-	Caixa.BackgroundColor3 = CoresCoresAtualmente.Fundo
+	Caixa.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	Caixa.BackgroundTransparency = 0.05
 	Caixa.BorderSizePixel = 1
-	Caixa.BorderColor3 = CoresCoresAtualmente.Borda
+	Caixa.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	Caixa.Parent = Gui
 
 	local Canto = Instance.new("UICorner")
@@ -327,7 +288,7 @@ local function CriarNotificacaoSalario(Texto)
 	SombraNotificacao.Size = UDim2.new(1, 30, 1, 30)
 	SombraNotificacao.BackgroundTransparency = 1
 	SombraNotificacao.Image = "rbxassetid://1316045217"
-	SombraNotificacao.ImageColor3 = CoresCoresAtualmente.Sombra
+	SombraNotificacao.ImageColor3 = Color3.fromRGB(105, 45, 180)
 	SombraNotificacao.ImageTransparency = 0.55
 	SombraNotificacao.ScaleType = Enum.ScaleType.Slice
 	SombraNotificacao.SliceCenter = Rect.new(10, 10, 118, 118)
@@ -339,7 +300,7 @@ local function CriarNotificacaoSalario(Texto)
 	local Topo = Instance.new("Frame")
 	Topo.Name = "Topo"
 	Topo.Size = UDim2.new(1, 0, 0, 28)
-	Topo.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+	Topo.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	Topo.BackgroundTransparency = 0.12
 	Topo.BorderSizePixel = 0
 	Topo.Parent = Caixa
@@ -354,7 +315,7 @@ local function CriarNotificacaoSalario(Texto)
 	Icone.Position = UDim2.new(0, 5, 0, 0)
 	Icone.BackgroundTransparency = 1
 	Icone.Text = "🦟"
-	Icone.TextColor3 = CoresCoresAtualmente.Texto
+	Icone.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Icone.Font = Enum.Font.GothamBold
 	Icone.TextSize = 18
 	Icone.Parent = Topo
@@ -365,7 +326,7 @@ local function CriarNotificacaoSalario(Texto)
 	TituloNotificacao.Position = UDim2.new(0, 38, 0, 0)
 	TituloNotificacao.BackgroundTransparency = 1
 	TituloNotificacao.Text = "MoscaMenu"
-	TituloNotificacao.TextColor3 = CoresCoresAtualmente.Texto
+	TituloNotificacao.TextColor3 = Color3.fromRGB(255, 255, 255)
 	TituloNotificacao.Font = Enum.Font.GothamBold
 	TituloNotificacao.TextSize = 14
 	TituloNotificacao.TextXAlignment = Enum.TextXAlignment.Left
@@ -377,7 +338,7 @@ local function CriarNotificacaoSalario(Texto)
 	Mensagem.Position = UDim2.new(0, 10, 0, 34)
 	Mensagem.BackgroundTransparency = 1
 	Mensagem.Text = Texto or "MoscaMenu"
-	Mensagem.TextColor3 = CoresCoresAtualmente.TextoSecundario
+	Mensagem.TextColor3 = Color3.fromRGB(235, 235, 235)
 	Mensagem.TextTransparency = 0.02
 	Mensagem.Font = Enum.Font.GothamBold
 	Mensagem.TextSize = 13
@@ -474,7 +435,6 @@ local PaginaPlayer = CriarPagina("Player", true)
 local PaginaTP = CriarPagina("TP", true)
 local PaginaVisual = CriarPagina("Visual", true)
 local PaginaKeys = CriarPagina("Keys", true)
-local PaginaVeiculos = CriarPagina("Veiculos", true)
 
 local function TrocarPagina(Nome)
 	if TelaDeCarregamentoAtiva() then
@@ -491,12 +451,12 @@ local function CriarBotaoMenu(Texto)
 	local Botao = Instance.new("TextButton")
 	Botao.Name = Texto
 	Botao.Size = UDim2.new(1, -8, 0, 30)
-	Botao.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+	Botao.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
 	Botao.BackgroundTransparency = 0.08
 	Botao.BorderSizePixel = 1
-	Botao.BorderColor3 = CoresCoresAtualmente.BordaBotao
+	Botao.BorderColor3 = Color3.fromRGB(22, 22, 22)
 	Botao.Text = Texto
-	Botao.TextColor3 = CoresCoresAtualmente.Texto
+	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Botao.Font = Enum.Font.GothamBold
 	Botao.TextSize = 13
 	Botao.Parent = MenuLateral
@@ -520,18 +480,17 @@ CriarBotaoMenu("Player")
 CriarBotaoMenu("TP")
 CriarBotaoMenu("Visual")
 CriarBotaoMenu("Keys")
-CriarBotaoMenu("Veiculos")
 
 local function CriarTitulo(Parent, Texto)
 	local Label = Instance.new("TextLabel")
 	Label.Name = Texto
 	Label.Size = UDim2.new(1, -8, 0, 32)
-	Label.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+	Label.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	Label.BackgroundTransparency = 0.08
 	Label.BorderSizePixel = 1
-	Label.BorderColor3 = CoresCoresAtualmente.BordaBotao
+	Label.BorderColor3 = Color3.fromRGB(18, 18, 18)
 	Label.Text = Texto
-	Label.TextColor3 = CoresCoresAtualmente.Texto
+	Label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Label.Font = Enum.Font.GothamBold
 	Label.TextSize = 14
 	Label.Parent = Parent
@@ -543,12 +502,12 @@ local function CriarBotao(Parent, Texto, Funcao)
 	local Botao = Instance.new("TextButton")
 	Botao.Name = Texto
 	Botao.Size = UDim2.new(1, -8, 0, 32)
-	Botao.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+	Botao.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	Botao.BackgroundTransparency = 0.08
 	Botao.BorderSizePixel = 1
-	Botao.BorderColor3 = CoresCoresAtualmente.BordaBotao
+	Botao.BorderColor3 = Color3.fromRGB(18, 18, 18)
 	Botao.Text = Texto
-	Botao.TextColor3 = CoresCoresAtualmente.Texto
+	Botao.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Botao.Font = Enum.Font.GothamBold
 	Botao.TextSize = 13
 	Botao.Parent = Parent
@@ -565,14 +524,14 @@ local function CriarCaixa(Parent, Nome, Placeholder)
 	local Caixa = Instance.new("TextBox")
 	Caixa.Name = Nome
 	Caixa.Size = UDim2.new(1, -8, 0, 32)
-	Caixa.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+	Caixa.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	Caixa.BackgroundTransparency = 0.08
 	Caixa.BorderSizePixel = 1
-	Caixa.BorderColor3 = CoresCoresAtualmente.BordaBotao
+	Caixa.BorderColor3 = Color3.fromRGB(18, 18, 18)
 	Caixa.Text = ""
 	Caixa.PlaceholderText = Placeholder
-	Caixa.TextColor3 = CoresCoresAtualmente.Texto
-	Caixa.PlaceholderColor3 = CoresCoresAtualmente.TextoDesativado
+	Caixa.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Caixa.PlaceholderColor3 = Color3.fromRGB(160, 160, 160)
 	Caixa.Font = Enum.Font.GothamBold
 	Caixa.TextSize = 12
 	Caixa.ClearTextOnFocus = false
@@ -587,73 +546,13 @@ local function CriarCaixa(Parent, Nome, Placeholder)
 	return Caixa
 end
 
--- FUNÇÃO PARA ALTERAR TEMA
-local function AlterarTema(NovoTema)
-	if NovoTema == TemaAtual then
-		return
-	end
-
-	TemaAtual = NovoTema
-	if NovoTema == "Claro" then
-		CoresCoresAtualmente = CoresClaro
-	else
-		CoresCoresAtualmente = CoresCinza
-	end
-
-	-- Atualizar cores da janela
-	Janela.BackgroundColor3 = CoresCoresAtualmente.Fundo
-	Janela.BorderColor3 = CoresCoresAtualmente.Borda
-	
-	BarraTopo.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
-	Titulo.TextColor3 = CoresCoresAtualmente.Texto
-	Fechar.TextColor3 = CoresCoresAtualmente.Texto
-	
-	MenuLateral.BackgroundColor3 = CoresCoresAtualmente.FundoMenuLateral
-	Area.BackgroundColor3 = CoresCoresAtualmente.FundoArea
-
-	-- Atualizar todos os títulos
-	for _, child in ipairs(PaginaHome:GetChildren()) do
-		if child:IsA("TextLabel") or child:IsA("TextButton") then
-			child.TextColor3 = CoresCoresAtualmente.Texto
-			child.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
-			child.BorderColor3 = CoresCoresAtualmente.BordaBotao
-		end
-	end
-
-	for _, pagina in pairs(Paginas) do
-		if pagina ~= PaginaHome then
-			for _, child in ipairs(pagina:GetChildren()) do
-				if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-					child.TextColor3 = CoresCoresAtualmente.Texto
-					child.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
-					child.BorderColor3 = CoresCoresAtualmente.BordaBotao
-					if child:IsA("TextBox") then
-						child.PlaceholderColor3 = CoresCoresAtualmente.TextoDesativado
-					end
-				end
-			end
-		end
-	end
-
-	-- Atualizar botões do menu lateral
-	for _, botao in ipairs(MenuLateral:GetChildren()) do
-		if botao:IsA("TextButton") then
-			botao.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
-			botao.BorderColor3 = CoresCoresAtualmente.BordaBotao
-			botao.TextColor3 = CoresCoresAtualmente.Texto
-		end
-	end
-
-	CriarNotificacaoSalario("Tema alterado para: " .. NovoTema)
-end
-
 local Infos = Instance.new("Frame")
 Infos.Name = "Infos"
 Infos.Size = UDim2.new(1, -8, 0, 190)
-Infos.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+Infos.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 Infos.BackgroundTransparency = 0.08
 Infos.BorderSizePixel = 1
-Infos.BorderColor3 = CoresCoresAtualmente.BordaBotao
+Infos.BorderColor3 = Color3.fromRGB(18, 18, 18)
 Infos.Parent = PaginaHome
 AplicarGradiente(Infos)
 
@@ -663,7 +562,7 @@ InfosTitulo.Size = UDim2.new(1, -12, 0, 30)
 InfosTitulo.Position = UDim2.new(0, 6, 0, 5)
 InfosTitulo.BackgroundTransparency = 1
 InfosTitulo.Text = "Infos"
-InfosTitulo.TextColor3 = CoresCoresAtualmente.Texto
+InfosTitulo.TextColor3 = Color3.fromRGB(255, 255, 255)
 InfosTitulo.Font = Enum.Font.GothamBold
 InfosTitulo.TextSize = 15
 InfosTitulo.TextXAlignment = Enum.TextXAlignment.Left
@@ -676,7 +575,7 @@ local function CriarInfo(Texto, Ordem)
 	Label.Position = UDim2.new(0, 6, 0, 38 + ((Ordem - 1) * 25))
 	Label.BackgroundTransparency = 1
 	Label.Text = Texto
-	Label.TextColor3 = CoresCoresAtualmente.TextoSecundario
+	Label.TextColor3 = Color3.fromRGB(235, 235, 235)
 	Label.Font = Enum.Font.GothamBold
 	Label.TextSize = 12
 	Label.TextXAlignment = Enum.TextXAlignment.Left
@@ -689,15 +588,6 @@ CriarInfo("Holders: Wzjay & Menddsz", 2)
 CriarInfo("Mapa atual: " .. NomeMapa, 3)
 CriarInfo("Id da place: " .. tostring(game.PlaceId), 4)
 CriarInfo("Id do usuario: " .. tostring(Player.UserId), 5)
-
--- ADICIONAR BOTÕES DE TEMA NA HOME
-CriarBotao(PaginaHome, "Tema Claro", function()
-	AlterarTema("Claro")
-end)
-
-CriarBotao(PaginaHome, "Tema Escuro", function()
-	AlterarTema("Escuro")
-end)
 
 CriarTitulo(PaginaTimes, "Times")
 
@@ -777,12 +667,12 @@ KeyGerada.TextEditable = false
 local StatusKey = Instance.new("TextLabel")
 StatusKey.Name = "StatusKey"
 StatusKey.Size = UDim2.new(1, -8, 0, 32)
-StatusKey.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
+StatusKey.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 StatusKey.BackgroundTransparency = 0.08
 StatusKey.BorderSizePixel = 1
-StatusKey.BorderColor3 = CoresCoresAtualmente.BordaBotao
+StatusKey.BorderColor3 = Color3.fromRGB(18, 18, 18)
 StatusKey.Text = "Aguardando"
-StatusKey.TextColor3 = CoresCoresAtualmente.TextoSecundario
+StatusKey.TextColor3 = Color3.fromRGB(235, 235, 235)
 StatusKey.Font = Enum.Font.GothamBold
 StatusKey.TextSize = 12
 StatusKey.Parent = PaginaKeys
@@ -813,6 +703,11 @@ local function GerarKey()
 		Evento = ToolEvent
 	elseif Tipo == "veiculo" or Tipo == "veiculos" or Tipo == "carro" then
 		Evento = VeiculosEvent
+		-- Verificação adicional para Veículos
+		if not Evento then
+			DefinirStatusKey("VeiculosEvent nao encontrado em Gerador")
+			return
+		end
 	end
 
 	if not Evento then
@@ -888,170 +783,5 @@ if AnuncioEvent then
 		end
 	end)
 end
-
--- ===================== AUTO DRIVE MELHORADO =====================
-CriarTitulo(PaginaVeiculos, "Auto Drive")
-
-local CaixaDestino = CriarCaixa(PaginaVeiculos, "NomeDestino", "Nome do local (ex: Police)")
-local StatusAutoDrive = Instance.new("TextLabel")
-StatusAutoDrive.Name = "StatusAutoDrive"
-StatusAutoDrive.Size = UDim2.new(1, -8, 0, 32)
-StatusAutoDrive.BackgroundColor3 = CoresCoresAtualmente.FundoSecundario
-StatusAutoDrive.BackgroundTransparency = 0.08
-StatusAutoDrive.BorderSizePixel = 1
-StatusAutoDrive.BorderColor3 = CoresCoresAtualmente.BordaBotao
-StatusAutoDrive.Text = "Inativo"
-StatusAutoDrive.TextColor3 = CoresCoresAtualmente.TextoSecundario
-StatusAutoDrive.Font = Enum.Font.GothamBold
-StatusAutoDrive.TextSize = 12
-StatusAutoDrive.Parent = PaginaVeiculos
-AplicarGradiente(StatusAutoDrive)
-
-local function AtualizarStatusAutoDrive(Status)
-	StatusAutoDrive.Text = Status
-end
-
-local function PararAutoDrive()
-	AutoDriveAtivo = false
-	VeiculoSeatAtual = nil
-	if AutoDriveThread then
-		task.cancel(AutoDriveThread)
-		AutoDriveThread = nil
-	end
-	AtualizarStatusAutoDrive("Parado")
-end
-
-local function ProcurarVehicleSeat()
-	local Personagem = Player.Character
-	if not Personagem then return nil end
-
-	-- Procura recursivamente por VehicleSeat ou DriveSeat
-	local function ProcurarRecursivo(obj)
-		if obj:IsA("VehicleSeat") or obj:IsA("DriveSeat") then
-			return obj
-		end
-		
-		for _, child in ipairs(obj:GetChildren()) do
-			local encontrado = ProcurarRecursivo(child)
-			if encontrado then
-				return encontrado
-			end
-		end
-		
-		return nil
-	end
-
-	return ProcurarRecursivo(Personagem)
-end
-
-local function IniciarAutoDrive()
-	if AutoDriveAtivo then
-		PararAutoDrive()
-		return
-	end
-
-	if TelaDeCarregamentoAtiva() then
-		DestruirMenuSeExistir()
-		return
-	end
-
-	local Destino = CaixaDestino.Text
-	if Destino == "" then
-		AtualizarStatusAutoDrive("Digite um destino")
-		return
-	end
-
-	-- Procurar VehicleSeat ou DriveSeat
-	local Seat = ProcurarVehicleSeat()
-	
-	if not Seat then
-		AtualizarStatusAutoDrive("Entre em um veículo!")
-		return
-	end
-
-	-- Verifica se está ocupado
-	if Seat.Occupant == nil then
-		AtualizarStatusAutoDrive("Sente em um veículo!")
-		return
-	end
-
-	AutoDriveAtivo = true
-	VeiculoSeatAtual = Seat
-	UltimaDestinacao = Destino
-	AtualizarStatusAutoDrive("AutoDrive: " .. Destino)
-
-	-- Thread do AutoDrive
-	AutoDriveThread = task.spawn(function()
-		while AutoDriveAtivo and VeiculoSeatAtual and VeiculoSeatAtual.Parent do
-			task.wait(0.05)
-			
-			-- Procurar destino no Workspace
-			local DestinoLocal = workspace:FindFirstChild(Destino)
-			
-			if DestinoLocal then
-				-- Obter posição do destino
-				local PosicaoDestino
-				if DestinoLocal:IsA("Model") and DestinoLocal:FindFirstChild("PrimaryPart") then
-					PosicaoDestino = DestinoLocal.PrimaryPart.Position
-				elseif DestinoLocal:FindFirstChildOfClass("BasePart") then
-					PosicaoDestino = DestinoLocal:FindFirstChildOfClass("BasePart").Position
-				else
-					PosicaoDestino = DestinoLocal.Position
-				end
-				
-				-- Obter posição do veículo
-				local PosicaoVeiculo
-				if VeiculoSeatAtual.Parent and VeiculoSeatAtual.Parent:IsA("Model") then
-					if VeiculoSeatAtual.Parent:FindFirstChild("PrimaryPart") then
-						PosicaoVeiculo = VeiculoSeatAtual.Parent.PrimaryPart.Position
-					else
-						PosicaoVeiculo = VeiculoSeatAtual.Position
-					end
-				else
-					PosicaoVeiculo = VeiculoSeatAtual.Position
-				end
-				
-				local Distancia = (PosicaoDestino - PosicaoVeiculo).Magnitude
-				
-				if Distancia < 30 then
-					AtualizarStatusAutoDrive("Chegou no destino! ✅")
-					PararAutoDrive()
-					break
-				else
-					-- Simular inputs de direção
-					local Direcao = (PosicaoDestino - PosicaoVeiculo).Unit
-					
-					-- Pressionar W (frente)
-					UserInputService:SendKeyEvent(true, Enum.KeyCode.W, false)
-					
-					-- Girar para a direção
-					if math.abs(Direcao.X) > 0.2 then
-						if Direcao.X > 0 then
-							UserInputService:SendKeyEvent(true, Enum.KeyCode.D, false)
-							task.wait(0.02)
-							UserInputService:SendKeyEvent(false, Enum.KeyCode.D, false)
-						else
-							UserInputService:SendKeyEvent(true, Enum.KeyCode.A, false)
-							task.wait(0.02)
-							UserInputService:SendKeyEvent(false, Enum.KeyCode.A, false)
-						end
-					end
-					
-					AtualizarStatusAutoDrive(string.format("Distância: %.1f studs", Distancia))
-				end
-			else
-				AtualizarStatusAutoDrive("Destino não encontrado")
-				PararAutoDrive()
-				break
-			end
-		end
-		
-		-- Soltar W ao parar
-		UserInputService:SendKeyEvent(false, Enum.KeyCode.W, false)
-	end)
-end
-
-CriarBotao(PaginaVeiculos, "Iniciar AutoDrive", IniciarAutoDrive)
-CriarBotao(PaginaVeiculos, "Parar AutoDrive", PararAutoDrive)
 
 TrocarPagina("Home")
