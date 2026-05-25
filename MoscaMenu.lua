@@ -7,28 +7,20 @@ local TweenService = game:GetService("TweenService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local NomeGuiMenu = "MenuUI"
+local NomeGuiMenu = "MoscaMenuGui"
 
 local function TelaDeCarregamentoAtiva()
 	for _, Gui in ipairs(PlayerGui:GetChildren()) do
 		if Gui:IsA("ScreenGui") then
 			local Nome = string.lower(Gui.Name)
 
-			if string.find(Nome, "loading") or string.find(Nome, "carregamento") or string.find(Nome, "load") then
+			if Nome == "loadingscreen"
+				or Nome == "loading"
+				or Nome == "carregamento"
+				or Nome == "telacarregamento" then
+
 				if Gui.Enabled then
 					return true
-				end
-			end
-
-			for _, Desc in ipairs(Gui:GetDescendants()) do
-				if Desc:IsA("GuiObject") then
-					local NomeDesc = string.lower(Desc.Name)
-
-					if string.find(NomeDesc, "loading") or string.find(NomeDesc, "carregamento") or string.find(NomeDesc, "load") then
-						if Desc.Visible then
-							return true
-						end
-					end
 				end
 			end
 		end
@@ -45,9 +37,9 @@ local function DestruirMenuSeExistir()
 	end
 end
 
-if TelaDeCarregamentoAtiva() then
+while TelaDeCarregamentoAtiva() do
 	DestruirMenuSeExistir()
-	return
+	task.wait(0.5)
 end
 
 PlayerGui.ChildAdded:Connect(function()
@@ -58,21 +50,29 @@ PlayerGui.ChildAdded:Connect(function()
 	end
 end)
 
-local RemoteTimes = ReplicatedStorage:WaitForChild("TeamJoinEvent")
-local BatePontoRemotes = ReplicatedStorage:WaitForChild("BatePontoRemotes")
-local RemoteSalario = BatePontoRemotes:WaitForChild("NotificarSalario")
+local RemoteTimes = ReplicatedStorage:FindFirstChild("TeamJoinEvent")
 
-local Gerador = ReplicatedStorage:WaitForChild("Gerador", 10)
-local CoinEvent = Gerador and Gerador:FindFirstChild("CoinEvent")
-local ToolEvent = Gerador and Gerador:FindFirstChild("ToolEvent")
-local VeiculosEvent = Gerador and Gerador:FindFirstChild("VeiculosEvent")
-local AnuncioEvent = Gerador and Gerador:FindFirstChild("AnuncioEvent")
+local BatePontoRemotes = ReplicatedStorage:FindFirstChild("BatePontoRemotes")
+local RemoteSalario = nil
 
-local GuiAntiga = PlayerGui:FindFirstChild(NomeGuiMenu)
-
-if GuiAntiga then
-	GuiAntiga:Destroy()
+if BatePontoRemotes then
+	RemoteSalario = BatePontoRemotes:FindFirstChild("NotificarSalario")
 end
+
+local Gerador = ReplicatedStorage:FindFirstChild("Gerador")
+local CoinEvent = nil
+local ToolEvent = nil
+local VeiculosEvent = nil
+local AnuncioEvent = nil
+
+if Gerador then
+	CoinEvent = Gerador:FindFirstChild("CoinEvent")
+	ToolEvent = Gerador:FindFirstChild("ToolEvent")
+	VeiculosEvent = Gerador:FindFirstChild("VeiculosEvent")
+	AnuncioEvent = Gerador:FindFirstChild("AnuncioEvent")
+end
+
+DestruirMenuSeExistir()
 
 local NomeMapa = game.Name
 
@@ -376,18 +376,20 @@ local function CriarNotificacaoSalario(Texto)
 	end)
 end
 
-RemoteSalario.OnClientEvent:Connect(function(...)
-	local Argumentos = {...}
-	local TextoFinal = "MoscaMenu"
+if RemoteSalario then
+	RemoteSalario.OnClientEvent:Connect(function(...)
+		local Argumentos = {...}
+		local TextoFinal = "MoscaMenu"
 
-	if typeof(Argumentos[1]) == "string" and Argumentos[1] ~= "" then
-		TextoFinal = Argumentos[1]
-	elseif typeof(Argumentos[2]) == "string" and Argumentos[2] ~= "" then
-		TextoFinal = Argumentos[2]
-	end
+		if typeof(Argumentos[1]) == "string" and Argumentos[1] ~= "" then
+			TextoFinal = Argumentos[1]
+		elseif typeof(Argumentos[2]) == "string" and Argumentos[2] ~= "" then
+			TextoFinal = Argumentos[2]
+		end
 
-	CriarNotificacaoSalario(TextoFinal)
-end)
+		CriarNotificacaoSalario(TextoFinal)
+	end)
+end
 
 local Paginas = {}
 
@@ -591,7 +593,9 @@ CriarTitulo(PaginaTimes, "Times")
 
 local function CriarBotaoTime(Time)
 	CriarBotao(PaginaTimes, Time.Name, function()
-		RemoteTimes:FireServer(Time.Name)
+		if RemoteTimes then
+			RemoteTimes:FireServer(Time.Name)
+		end
 	end)
 end
 
@@ -619,6 +623,10 @@ local CooldownSalario = false
 
 CriarBotao(PaginaPlayer, "Notificar Salario Todos", function()
 	if CooldownSalario then
+		return
+	end
+
+	if not RemoteSalario then
 		return
 	end
 
@@ -687,7 +695,7 @@ local function GerarKey()
 
 	local Tipo = string.lower(TipoKey.Text)
 	local ValorTexto = ValorKey.Text
-	local Evento
+	local Evento = nil
 
 	if Tipo == "coins" or Tipo == "coin" or Tipo == "dinheiro" then
 		Evento = CoinEvent
@@ -736,6 +744,7 @@ local function ConfigurarRespostaKey(Evento, Nome)
 			DefinirStatusKey("Key recebida de " .. Nome)
 
 			local CorOriginal = KeyGerada.BackgroundColor3
+
 			TweenService:Create(KeyGerada, TweenInfo.new(0.2), {
 				BackgroundColor3 = Color3.fromRGB(85, 60, 120)
 			}):Play()
